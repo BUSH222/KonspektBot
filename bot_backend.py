@@ -58,3 +58,15 @@ def save_note(image: Image, uploader_user: str, uploader_userid: str,
             uploader_user, uploader_userid, uploader_studentid)
     cur.execute("INSERT INTO notestable VALUES (?, ?, ?, ?, ?, ?, ?)", data)
     con.commit()
+
+
+def get_note(known_values: dict):
+    """Return a list of notes that match the known values."""
+    where_clause = ' AND '.join([f'{k} = ?' for k in known_values.keys()])
+    sql_query = f'SELECT * FROM notestable WHERE {where_clause}'
+    cur.execute(sql_query, tuple(known_values.values()))
+    rows = cur.fetchall()
+    result_rows = []
+    for row in rows:
+        result_rows.append([Image.open(f'{DIR_PATH}/images/{row[0]}'), *row[1:]])
+    return result_rows
