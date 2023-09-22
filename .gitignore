@@ -1,7 +1,9 @@
 # basic
 
 *.db
-*.sqlite3
+*.sql
+*.png
+images/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
