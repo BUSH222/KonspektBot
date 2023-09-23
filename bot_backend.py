@@ -28,13 +28,26 @@ def full_name(lesson_name: str):
     return VALID_NAMES[lesson_name]
 
 
-def create_table():
+def create_tables():
     """Create a table if it doesnt exist."""
     global cur, con
     cur.execute("CREATE TABLE IF NOT EXISTS notestable(image, lesson_name,\
                  lesson_date, upload_date, uploader_user, uploader_userid,\
                  uploader_studentid)")
+    cur.execute("CREATE TABLE IF NOT EXISTS userstats(uploader_user,\
+                 uploader_userid, uploader_studentid)")
     con.commit()
+
+
+def truncate_table(table_name="notestable"):
+    """
+    Delete data from the table.
+
+    DO NOT RUN THIS FUNCTION IN TELEGRAM_BOT.PY
+    THIS IS FOR DEBUGGING ONLY
+    """
+    global cur, con
+    cur.execute(f"DELETE FROM {table_name}")
 
 
 def close_connection():
@@ -46,8 +59,9 @@ def close_connection():
 def save_note(image: Image, uploader_user: str, uploader_userid: str,
               uploader_studentid: int, upload_date: date, lesson_date: date,
               lesson_name: str):
-    """Save a note to the database."""  # TODO: check lesson name
-    global cur, con
+    """Save a note to the database."""
+    global cur, con, valid_name
+    assert valid_name(lesson_name)
     image_index = get_image_index()
 
     # Save image
@@ -61,7 +75,14 @@ def save_note(image: Image, uploader_user: str, uploader_userid: str,
 
 
 def get_note(known_values: dict):
-    """Return a list of notes that match the known values."""
+    """
+    Return a list of notes that match the known values.
+
+    Known values must contain at least 1 of:
+    user, userid, studentid
+    """
+    global cur, conn
+    assert set(known_values.keys()).issubset(['user', 'userid', 'studentid'])
     where_clause = ' AND '.join([f'{k} = ?' for k in known_values.keys()])
     sql_query = f'SELECT * FROM notestable WHERE {where_clause}'
     cur.execute(sql_query, tuple(known_values.values()))
@@ -70,3 +91,37 @@ def get_note(known_values: dict):
     for row in rows:
         result_rows.append([Image.open(f'{DIR_PATH}/images/{row[0]}'), *row[1:]])
     return result_rows
+
+
+def update_statistics(known_values: dict,
+                      updated_value_name: str, updated_value_action=1):
+    """
+    Update the user statistics.
+
+    Known values must contain at least 1 of:
+    user, userid, studentid
+    """
+    global cur, conn
+    assert set(known_values.keys()).issubset(['user', 'userid', 'studentid'])
+    where_clause = ' AND '.join([f'{k} = ?' for k in known_values.keys()])
+    cur.execute(f"""
+        UPDATE userstats
+        SET {updated_value_name} = {updated_value_name} + {updated_value_action}
+        WHERE {where_clause}""", tuple(known_values.values()))
+    conn.commit()
+
+
+def get_statistics(known_values: dict):
+    """
+    Return a dict of statistics like this: {note_upload:3, note_view:1}.
+
+    Known values must contain at least 1 of:
+    user, userid, studentid
+    """
+    global cur, conn
+    assert set(known_values.keys()).issubset(['user', 'userid', 'studentid'])
+    where_clause = ' AND '.join([f'{k} = ?' for k in known_values.keys()])
+    sql_query = f'SELECT * FROM userstats WHERE {where_clause}'
+    cur.execute(sql_query, tuple(known_values.values()))
+    res = cur.fetchall()
+    return {"note_upload": int(res["note_upload"]), "note_view": int(res["note_view"])}
