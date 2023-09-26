@@ -4,6 +4,7 @@
 *.sql
 *.png
 images/
+token_name.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

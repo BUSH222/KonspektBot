@@ -14,6 +14,7 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=["start"])
 async def start_command(message: types.Message):
+    """Please docstring here."""  # DOCSTRING HERE
     await bot.send_message(chat_id=message.from_user.id,
                            text='Здравствуте, уважаемый пользователь. Вы хотите отправить или получить конспект?',
                            reply_markup=kb)
@@ -21,6 +22,7 @@ async def start_command(message: types.Message):
 
 @dp.message_handler(Text(equals="Отправить"))
 async def start_send(message: types.Message):
+    """Please docstring here."""  # DOCSTRING HERE
     await message.answer(
         text='Какой конспект вы хотите отправить?',
         reply_markup=kb2)
@@ -28,6 +30,7 @@ async def start_send(message: types.Message):
 
 @dp.message_handler(Text(equals="Получить"))
 async def start_get_lesson(message: types.Message):
+    """Please docstring here."""  # DOCSTRING HERE
     await message.answer(
         text='Какой конспект вы хотите получить?',
         reply_markup=kb2)
@@ -35,6 +38,7 @@ async def start_get_lesson(message: types.Message):
 
 @dp.message_handler(Text(equals="Математический Анализ"))
 async def start_get_LP(message: types.Message):
+    """Please docstring here."""  # DOCSTRING HERE
     await message.answer(
         text='Лекция или практика?',
         reply_markup=kb3)
